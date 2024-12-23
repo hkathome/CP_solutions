@@ -19,9 +19,10 @@
 #define deb(x) cerr<<#x<<" "<<x<<"\n";
 #define debug2(x,y) cerr<<#x<<" "<<x<<" "<<#y<<" "<<y<<"\n";
 #include <chrono>
+#include <cstring>
 #include <random>
 using namespace std;
-const int mod=1e9+10;
+const int mod=998244353;
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
 #ifndef ONLINE_JUDGE
@@ -78,65 +79,40 @@ struct custom_hash {
 //unordered_map<lli,lli,custom_hash> ed;
 //unordered_map<lli,lli,custom_hash> mp;
 ll getRandomNumber(ll l, ll r) {return uniform_int_distribution<ll>(l, r)(rng);} 
-int n,m,k;
-vector<int>hh,xx;
-bool ok(ll moves){
-    map<ll,int>Mp;
-    ll ct=0;
-    for(int i=0;i<n;i++){
-        ll k1=1ll*hh[i]+1ll*(xx[i]-m)*moves;
-       // dbgm(i,hh[i],xx[i]);
-       // dbg(k1);
-        if(k1>1ll*xx[i]*moves){
-            continue;
-        }
-        ll k2=1ll*(xx[i]+m)*moves-1ll*hh[i];
-       // dbg(k2);
-        if(k2<1ll*xx[i]*moves){
-            continue;
-        }
-        ll kk1=(k1+moves-1)/moves;
-        ll kk2=k2/moves;
-      //  dbgm(kk1,kk2);
-        if(kk2>=kk1){   
-            Mp[kk1]++;
-            Mp[kk2+1]--;
-        }
-    }
-    ll pre=0;
-    trav(z,Mp){
-        pre+=z.ss;
-        ct=max(pre,ct); 
-    }
-    return ct>=k;
-
-}
+int n;
+vector<vector<int>>adj;
 void solve(){
-    cin>>n>>m>>k;
-    hh.clear();xx.clear();hh.resize(n);xx.resize(n);
-    for(int i=0;i<n;i++){
-        cin>>hh[i];
+    cin>>n;
+    adj.clear();
+    adj.resize(n+1);
+    vector<int>in(n+1,0);
+    for(int i=1;i<=n;i++){
+        int x;cin>>x;
+        adj[i].pb(x);
+        in[x]++;
     }
-    for(int i=0;i<n;i++){
-        cin>>xx[i];
-    }
-    int l=0;//l<moves
-    int r=mod;//r<=moves
-    //dbg(ok(2));
-    while(r-l>1){
-        int mid=l+(r-l)/2;
-        if(ok(mid)){
-            r=mid;
-        }
-        else{
-            l=mid;
+    vector<int>dp(n+1,2);
+    queue<int>q;
+    for(int i=1;i<=n;i++){
+        if(in[i]==0){
+            q.push(i);
         }
     }
-    if(r==mod){
-        cout<<"-1\n";
-        return;
+    while(!q.empty()){
+        auto z=q.front();q.pop();
+        trav(x,adj[z]){
+            in[x]--;
+            dp[x]=max(dp[x],dp[z]+1);
+            if(in[x]==0){
+                q.push(x);
+            }
+        }
     }
-    cout<<r<<n_l;
+    int ans=0;
+    for(int i=1;i<=n;i++){
+        ans=max(ans,dp[i]);
+    }
+    cout<<ans<<n_l;
 }
 int main() {
     #ifndef ONLINE_JUDGE
@@ -153,4 +129,4 @@ int main() {
     solve();
   }
     
-}
+}   

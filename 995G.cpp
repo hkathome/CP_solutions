@@ -19,9 +19,10 @@
 #define deb(x) cerr<<#x<<" "<<x<<"\n";
 #define debug2(x,y) cerr<<#x<<" "<<x<<" "<<#y<<" "<<y<<"\n";
 #include <chrono>
+#include <cstring>
 #include <random>
 using namespace std;
-const int mod=1e9+10;
+const int mod=998244353;
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
 #ifndef ONLINE_JUDGE
@@ -73,70 +74,100 @@ struct custom_hash {
         return splitmix64(x + FIXED_RANDOM);
     }
 };
-
+const int M=20;
+const int N=(1<<20);
 
 //unordered_map<lli,lli,custom_hash> ed;
 //unordered_map<lli,lli,custom_hash> mp;
 ll getRandomNumber(ll l, ll r) {return uniform_int_distribution<ll>(l, r)(rng);} 
-int n,m,k;
-vector<int>hh,xx;
-bool ok(ll moves){
-    map<ll,int>Mp;
-    ll ct=0;
+int dp[N][M];
+int n,q;
+vector<vector<int>>dp1;
+int req;
+vector<pii>adj1[M],adj2[M];
+int p2[M];
+void calc_p2(){
+    p2[0]=1;
+    for(int i=1;i<M;i++){
+        p2[i]=p2[i-1]*2;
+    }
+}
+int calc(int mask,int  lst){
+    if(mask==req){
+        return (int)adj1[lst].size();
+    }
+    if(dp[mask][lst]!=-1){
+        return dp[mask][lst];
+    }
+    dp[mask][lst]=mod;
     for(int i=0;i<n;i++){
-        ll k1=1ll*hh[i]+1ll*(xx[i]-m)*moves;
-       // dbgm(i,hh[i],xx[i]);
-       // dbg(k1);
-        if(k1>1ll*xx[i]*moves){
-            continue;
-        }
-        ll k2=1ll*(xx[i]+m)*moves-1ll*hh[i];
-       // dbg(k2);
-        if(k2<1ll*xx[i]*moves){
-            continue;
-        }
-        ll kk1=(k1+moves-1)/moves;
-        ll kk2=k2/moves;
-      //  dbgm(kk1,kk2);
-        if(kk2>=kk1){   
-            Mp[kk1]++;
-            Mp[kk2+1]--;
+        if(!((mask>>i)&1)){
+            assert(lst!=i);
+            dp[mask][lst]=min(dp[mask][lst],dp1[lst][i]+1+calc(mask+p2[i],i));
         }
     }
-    ll pre=0;
-    trav(z,Mp){
-        pre+=z.ss;
-        ct=max(pre,ct); 
-    }
-    return ct>=k;
+    return dp[mask][lst];
 
 }
 void solve(){
-    cin>>n>>m>>k;
-    hh.clear();xx.clear();hh.resize(n);xx.resize(n);
-    for(int i=0;i<n;i++){
-        cin>>hh[i];
+cin>>n>>q;
+dp1.clear();
+dp1.resize(n,vector<int>(n,0));
+for(int i=0;i<q;i++){
+    int x;char w;
+    cin>>x>>w;
+    x--;
+    int k=1;
+    if(w=='-'){
+        k=-1;
+        adj2[x].pb({i,k});
     }
-    for(int i=0;i<n;i++){
-        cin>>xx[i];
+    else{
+        adj1[x].pb({i,k});
     }
-    int l=0;//l<moves
-    int r=mod;//r<=moves
-    //dbg(ok(2));
-    while(r-l>1){
-        int mid=l+(r-l)/2;
-        if(ok(mid)){
-            r=mid;
+    
+}
+req=(1<<n)-1;
+for(int i=0;i<n;i++){
+    for(int j=0;j<n;j++){
+        if(i==j)continue;
+        int l1=0,l2=0;
+        int ans=0;
+        int pre=0;
+        int n1=adj1[i].size() ,n2=adj2[j].size();
+        while(l1<n1 || l2<n2){
+            if(l1<n1 && l2<n2){
+                if(adj1[i][l1].ff<adj2[j][l2].ff){
+                    pre++;
+                    l1++;
+                }
+                else{
+                    pre--;
+                    l2++;
+                }
+            }
+            else if(l1<n1){
+                pre++;
+                l1++;
+            }
+            else if(l2<n2){
+                pre--;
+                l2++;
+            }
+            ans=max(ans,pre);
         }
-        else{
-            l=mid;
-        }
+        dp1[i][j]=ans;
+
     }
-    if(r==mod){
-        cout<<"-1\n";
-        return;
-    }
-    cout<<r<<n_l;
+}
+dbg(dp1);
+int ans=mod;
+memset(dp,-1,sizeof(dp));
+for(int i=0;i<n;i++){
+    ans=min(ans,1+calc(p2[i],i));
+}
+cout<<ans<<n_l;
+
 }
 int main() {
     #ifndef ONLINE_JUDGE
@@ -148,7 +179,8 @@ int main() {
     cin.tie(NULL);
     cout.tie(NULL);
   int t=1;
-  cin>>t;
+  calc_p2();
+ // cin>>t;
   while(t--){
     solve();
   }

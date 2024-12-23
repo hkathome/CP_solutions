@@ -19,9 +19,10 @@
 #define deb(x) cerr<<#x<<" "<<x<<"\n";
 #define debug2(x,y) cerr<<#x<<" "<<x<<" "<<#y<<" "<<y<<"\n";
 #include <chrono>
+#include <cstring>
 #include <random>
 using namespace std;
-const int mod=1e9+10;
+const int mod=998244353;
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
 #ifndef ONLINE_JUDGE
@@ -73,70 +74,34 @@ struct custom_hash {
         return splitmix64(x + FIXED_RANDOM);
     }
 };
-
+const int M=3000;
 
 //unordered_map<lli,lli,custom_hash> ed;
 //unordered_map<lli,lli,custom_hash> mp;
 ll getRandomNumber(ll l, ll r) {return uniform_int_distribution<ll>(l, r)(rng);} 
-int n,m,k;
-vector<int>hh,xx;
-bool ok(ll moves){
-    map<ll,int>Mp;
-    ll ct=0;
-    for(int i=0;i<n;i++){
-        ll k1=1ll*hh[i]+1ll*(xx[i]-m)*moves;
-       // dbgm(i,hh[i],xx[i]);
-       // dbg(k1);
-        if(k1>1ll*xx[i]*moves){
-            continue;
-        }
-        ll k2=1ll*(xx[i]+m)*moves-1ll*hh[i];
-       // dbg(k2);
-        if(k2<1ll*xx[i]*moves){
-            continue;
-        }
-        ll kk1=(k1+moves-1)/moves;
-        ll kk2=k2/moves;
-      //  dbgm(kk1,kk2);
-        if(kk2>=kk1){   
-            Mp[kk1]++;
-            Mp[kk2+1]--;
-        }
-    }
-    ll pre=0;
-    trav(z,Mp){
-        pre+=z.ss;
-        ct=max(pre,ct); 
-    }
-    return ct>=k;
 
-}
 void solve(){
-    cin>>n>>m>>k;
-    hh.clear();xx.clear();hh.resize(n);xx.resize(n);
-    for(int i=0;i<n;i++){
-        cin>>hh[i];
+    int n;
+    cin>>n;
+    vector<int>v(n+1);
+    vector<vector<int>>adj(3001);
+    for(int i=1;i<=n;i++){
+        cin>>v[i];
+        adj[v[i]].pb(i);
     }
-    for(int i=0;i<n;i++){
-        cin>>xx[i];
-    }
-    int l=0;//l<moves
-    int r=mod;//r<=moves
-    //dbg(ok(2));
-    while(r-l>1){
-        int mid=l+(r-l)/2;
-        if(ok(mid)){
-            r=mid;
+    vector<vector<int>>dp(n+1,vector<int>(M+1,0));
+    int ans=0;
+    for(int i=1;i<=n;i++){
+       for(int k=1;k<=M;k++){
+        dp[i][k]=1;
+        if(i-k>0 && v[i-k]==v[i]){
+            dp[i][k]=max(dp[i][k],dp[i-k][k]+1);
         }
-        else{
-            l=mid;
-        }
+        ans=max(ans,dp[i][k]);
+       }
     }
-    if(r==mod){
-        cout<<"-1\n";
-        return;
-    }
-    cout<<r<<n_l;
+    cout<<ans<<n_l;
+
 }
 int main() {
     #ifndef ONLINE_JUDGE
@@ -148,7 +113,7 @@ int main() {
     cin.tie(NULL);
     cout.tie(NULL);
   int t=1;
-  cin>>t;
+// cin>>t;
   while(t--){
     solve();
   }
